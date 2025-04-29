@@ -1,0 +1,142 @@
+import React from 'react';
+import { 
+  Box, 
+  Typography, 
+  Grid, 
+  Paper, 
+  Button,
+  Divider,
+  Card,
+  CardContent,
+  CardActions,
+  Chip,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import { useTaxContext } from '../context/TaxContext';
+
+// Helper function to get color based on difficulty
+const getDifficultyColor = (difficulty: string): 'success' | 'warning' | 'error' => {
+  switch (difficulty) {
+    case 'Easy':
+      return 'success';
+    case 'Medium':
+      return 'warning';
+    case 'Hard':
+      return 'error';
+    default:
+      return 'success';
+  }
+};
+
+const TaxSuggestions: React.FC = () => {
+  const { 
+    taxSavingSuggestions, 
+    isLoading, 
+    error, 
+    taxCalculation, 
+    generateSuggestions 
+  } = useTaxContext();
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  return (
+    <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+      <Typography variant="h5" gutterBottom>
+        Tax-Saving Suggestions
+      </Typography>
+      <Typography variant="body1" color="text.secondary" paragraph>
+        Personalized suggestions to help you reduce your tax liability and maximize your savings.
+      </Typography>
+      
+      <Divider sx={{ my: 2 }} />
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+          <Typography variant="body1" sx={{ ml: 2 }}>
+            Generating tax-saving suggestions...
+          </Typography>
+        </Box>
+      ) : taxSavingSuggestions.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="body1" paragraph>
+            No tax-saving suggestions available. Click the button below to generate suggestions.
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={generateSuggestions}
+            size="large"
+            disabled={!taxCalculation}
+          >
+            Generate Tax-Saving Suggestions
+          </Button>
+          {!taxCalculation && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              You need to calculate your taxes first before generating suggestions.
+            </Typography>
+          )}
+        </Box>
+      ) : (
+        <>
+          <Grid container spacing={3}>
+            {taxSavingSuggestions.map((suggestion, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Card elevation={2}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Typography variant="h6" component="div" gutterBottom>
+                        {suggestion.title}
+                      </Typography>
+                      <Chip 
+                        label={suggestion.implementationDifficulty} 
+                        color={getDifficultyColor(suggestion.implementationDifficulty)}
+                        size="small"
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      {suggestion.description}
+                    </Typography>
+                    <Typography variant="subtitle1" color="primary">
+                      Potential Savings: {formatCurrency(suggestion.potentialSavings)}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small">Learn More</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+          
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Button 
+              variant="outlined" 
+              color="primary" 
+              onClick={generateSuggestions}
+            >
+              Regenerate Suggestions
+            </Button>
+          </Box>
+        </>
+      )}
+    </Paper>
+  );
+};
+
+export default TaxSuggestions; 
